@@ -45,7 +45,7 @@ src/core/
 - `get_status()` - Donne l'état actuel (temp, humidité, CO2, appareils)
 - `shutdown()` - Arrête tout proprement
 
-**Fichier utilisé par :** `main.py`, `src/api/app.py`
+**Fichier utilisé par :** `main.py`, `src/api/monitoring_api.py`
 
 ---
 
@@ -58,9 +58,10 @@ src/core/
 - Stocke la dernière valeur lue
 - Notifie les observateurs (l'orchestrateur)
 
-**Appareils concernés :**
-- 📡 **Capteur SCD30** (I2C, adresse 0x61)
-  - Lit via `hardware.lire_capteur()`
+**Appareil concerné :**
+- 📡 **Capteur SCD30** (I2C)
+
+📖 **Détails matériels** : [HARDWARE.md](../1-fundation/HARDWARE.md#-capteur-scd30)
 
 **Méthodes importantes :**
 - `start()` - Démarre la lecture en boucle
@@ -107,12 +108,12 @@ src/core/
 - Dit à chaque contrôleur de se mettre à jour
 - Gère le mode manuel/automatique
 
-**Appareils concernés :**
-- 💡 **LEDs** (GPIO 27)
-- 💧 **Humidificateur** (GPIO 26 + 13)
-  - Ventilateur (GPIO 26)
-  - Brumisateur (GPIO 13)
-- 🌬️ **Ventilation** (GPIO 22)
+**Appareils contrôlés :**
+- 💡 **LEDs**
+- 💧 **Humidificateur** (ventilateur + brumisateur)
+- 🌬️ **Ventilation**
+
+📖 **Détails matériels** : [HARDWARE.md](../1-fundation/HARDWARE.md#-vue-densemble-des-appareils)
 
 **Méthodes importantes :**
 - `update_from_sensor_data(data)` - Met à jour tous les appareils
@@ -166,8 +167,9 @@ Sinon
 ```
 
 **Appareil contrôlé :**
-- 💡 LEDs (GPIO 27)
-- État : `activer_leds()` ou `desactiver_leds()`
+- 💡 **LEDs**
+
+📖 **Configuration GPIO** : [HARDWARE.md](../1-fundation/HARDWARE.md#-leds-gpio-27)
 
 ---
 
@@ -182,10 +184,10 @@ Si humidité > 85%
   → Éteindre humidificateur
 ```
 
-**Appareils contrôlés :**
-- 💧 Ventilateur humidificateur (GPIO 26)
-- 💧 Brumisateur (GPIO 13)
-- État : `activer_humidificateur()` ou `desactiver_humidificateur()`
+**Appareil contrôlé :**
+- 💧 **Humidificateur** (ventilateur + brumisateur)
+
+📖 **Configuration GPIO** : [HARDWARE.md](../1-fundation/HARDWARE.md#-humidificateur-gpio-26--13)
 
 ---
 
@@ -201,8 +203,9 @@ Sinon
 ```
 
 **Appareil contrôlé :**
-- 🌬️ Ventilateur (GPIO 22)
-- État : `activer_ventilation()` ou `desactiver_ventilation()`
+- 🌬️ **Ventilation**
+
+📖 **Configuration GPIO** : [HARDWARE.md](../1-fundation/HARDWARE.md#%EF%B8%8F-ventilation-gpio-22)
 
 ---
 
@@ -248,17 +251,7 @@ Sinon
 7. Les LEDs s'allument 💡
 ```
 
-## 🔌 Appareils et GPIO
-
-| Appareil | Type | GPIO | État ON | État OFF |
-|----------|------|------|---------|----------|
-| LEDs | Relais | 27 | 0 | 1 |
-| Ventilateur humid | Relais | 26 | 0 | 1 |
-| Brumisateur | Relais | 13 | 0 | 1 |
-| Ventilation | Relais | 22 | 0 | 1 |
-| Capteur SCD30 | I2C | - | - | - |
-
-**Note :** GPIO = 0 active le relais (logique inverse)
+📖 **Configuration matérielle complète** : [HARDWARE.md](../1-fundation/HARDWARE.md)
 
 ## 📊 Données sauvegardées
 
@@ -303,13 +296,8 @@ Chaque enregistrement dans SQLite contient :
 ```
 
 ### Changer les GPIO
-**Fichier :** `src/config.py` (nécessite redémarrage)
-```python
-PIN_LEDS = 27
-VENTILATION_OUTPUT_PIN = 22
-PIN_FAN_HUMIDIFICATEUR = 26
-PIN_BRUMISATEUR = 13
-```
+
+📖 **Configuration des GPIO** : [HARDWARE.md](../1-fundation/HARDWARE.md#-configuration-des-gpio)
 
 ## 🐛 Dépannage
 
@@ -327,18 +315,11 @@ PIN_BRUMISATEUR = 13
    - Logs : `tail -f data/logs/serre_controller.log`
    - Chercher : "GPIO X mis à 0" (activé) ou "GPIO X mis à 1" (désactivé)
 
+📖 **Dépannage matériel complet** : [HARDWARE.md](../1-fundation/HARDWARE.md#-dépannage-matériel)
+
 ### Les capteurs retournent None
 
-1. **Vérifier I2C :**
-   ```bash
-   sudo i2cdetect -y 1
-   # Le capteur doit apparaître à 0x61
-   ```
-
-2. **Vérifier les logs :**
-   ```bash
-   tail -f data/logs/serre_controller.log | grep SCD30
-   ```
+📖 **Diagnostic capteur SCD30** : [HARDWARE.md](../1-fundation/HARDWARE.md#le-capteur-scd30-ne-répond-pas)
 
 ### La base de données ne s'écrit pas
 
@@ -360,9 +341,9 @@ PIN_BRUMISATEUR = 13
 | **ConfigurationManager** | Gérer paramètres | user_settings.json |
 | **ActuatorCoordinator** | Contrôler appareils | 3 contrôleurs |
 | **DataPersistenceService** | Sauvegarder données | serre.db (SQLite) |
-| **LedController** | Logique LEDs | GPIO 27 |
-| **HumidifierController** | Logique humidificateur | GPIO 26, 13 |
-| **VentilationController** | Logique ventilation | GPIO 22 |
+| **LedController** | Logique LEDs | LEDs |
+| **HumidifierController** | Logique humidificateur | Humidificateur |
+| **VentilationController** | Logique ventilation | Ventilation |
 | **SerreOrchestrator** | Coordonner tout | Tous les services |
 
 ---

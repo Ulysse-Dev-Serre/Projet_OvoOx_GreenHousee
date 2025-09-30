@@ -27,7 +27,7 @@ cd /home/ulysse/Projet_IoT_RaspberryPi
 source myenv/bin/activate
 export HARDWARE_ENV=raspberry_pi
 export DB_TYPE=sqlite
-python src/api/app.py
+python src/api/monitoring_api.py
 ```
 
 L'API démarre sur le port **5000**.
@@ -276,61 +276,16 @@ curl http://10.0.0.216:5000/health
 }
 ```
 
-## 🖥️ Utilisation dans votre application Desktop
+## 🖥️ Développer une Application Frontend
 
-### JavaScript (Electron)
+📖 **Guide complet pour connecter votre frontend** : [FRONTEND_CONNECT.md](../FRONTEND_CONNECT.md)
 
-```javascript
-// Récupérer l'état
-const response = await fetch('http://10.0.0.216:5000/api/status');
-const data = await response.json();
-console.log(`Température: ${data.temperature}°C`);
-
-// Activer les LEDs
-await fetch('http://10.0.0.216:5000/api/control/leds', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ active: true, state: true })
-});
-```
-
-### Python (PySide6)
-
-```python
-import requests
-
-# Récupérer l'état
-response = requests.get('http://10.0.0.216:5000/api/status')
-data = response.json()
-print(f"Température: {data['temperature']}°C")
-
-# Activer les LEDs
-requests.post(
-    'http://10.0.0.216:5000/api/control/leds',
-    json={'active': True, 'state': True}
-)
-```
-
-### Flutter (Mobile)
-
-```dart
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-// Récupérer l'état
-final response = await http.get(
-  Uri.parse('http://10.0.0.216:5000/api/status')
-);
-final data = jsonDecode(response.body);
-print('Température: ${data['temperature']}°C');
-
-// Activer les LEDs
-await http.post(
-  Uri.parse('http://10.0.0.216:5000/api/control/leds'),
-  headers: {'Content-Type': 'application/json'},
-  body: jsonEncode({'active': true, 'state': true})
-);
-```
+Ce guide contient :
+- Tous les endpoints nécessaires
+- Exemples de code (JavaScript, Python, Flutter)
+- Layout d'interface recommandé
+- Gestion des erreurs
+- Checklist de développement
 
 ## 🧪 Tester l'API rapidement
 

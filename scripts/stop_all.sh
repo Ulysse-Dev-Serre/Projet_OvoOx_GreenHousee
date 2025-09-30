@@ -4,14 +4,14 @@
 echo "🛑 Arrêt de tous les processus - Serre Connectée"
 echo "=================================================="
 
-# Arrêter Flask
-if pgrep -f "python src/api/app.py" > /dev/null; then
-    echo "Arrêt de Flask..."
-    pkill -f "python src/api/app.py"
+# Arrêter l'API de monitoring
+if pgrep -f "python src/api/monitoring_api.py" > /dev/null; then
+    echo "Arrêt de l'API de monitoring..."
+    pkill -f "python src/api/monitoring_api.py"
     sleep 1
-    echo "✅ Flask arrêté"
+    echo "✅ API arrêtée"
 else
-    echo "ℹ️  Flask n'était pas en cours d'exécution"
+    echo "ℹ️  L'API de monitoring n'était pas en cours d'exécution"
 fi
 
 # Arrêter main.py

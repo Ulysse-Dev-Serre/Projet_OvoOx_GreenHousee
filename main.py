@@ -81,43 +81,45 @@ main_logger = logging.getLogger(__name__) # Obtenir un logger spécifique pour c
 # --- Fin de la configuration du logging ---
 
 
-# Variable globale pour le contrôleur afin qu'il soit accessible par le gestionnaire de signal
+# Variables globales pour le contrôleur et l'API
 serre_controller_instance: SerreController | None = None
-controller_thread: threading.Thread | None = None # Pour gérer le thread du contrôleur
+controller_thread: threading.Thread | None = None
+api_thread: threading.Thread | None = None
 
 def signal_handler(signum, frame):
     """
     Gère les signaux d'arrêt (SIGINT, SIGTERM) pour un arrêt propre.
     """
-    signal_name = signal.Signals(signum).name if sys.platform != "win32" else f"Signal {signum}" # Windows ne nomme pas bien les signaux
+    signal_name = signal.Signals(signum).name if sys.platform != "win32" else f"Signal {signum}"
     main_logger.info(f"Signal {signal_name} reçu. Arrêt en cours...")
     
     # Demander au contrôleur de s'arrêter
     if serre_controller_instance:
-        # La méthode shutdown du contrôleur devrait idéalement changer un flag 'self.running = False'
-        # pour que sa boucle principale se termine naturellement.
         serre_controller_instance.shutdown() 
 
-    # Attendre que le thread du contrôleur se termine.
-    # Le thread du contrôleur devrait appeler serre_controller_instance.shutdown()
-    # dans son propre bloc finally s'il se termine par une exception.
+    # Attendre que le thread du contrôleur se termine
     if controller_thread and controller_thread.is_alive():
         main_logger.info("Attente de la fin du thread du SerreController (max 10s)...")
         controller_thread.join(timeout=10) 
         if controller_thread.is_alive():
             main_logger.warning("Le thread du SerreController n'a pas pu être arrêté proprement dans le délai imparti.")
     
+    # Attendre que l'API se termine (daemon thread, se terminera automatiquement)
+    if api_thread and api_thread.is_alive():
+        main_logger.info("Attente de la fin de l'API (max 5s)...")
+        api_thread.join(timeout=5)
+    
     main_logger.info("Application main.py terminée suite au signal.")
     sys.exit(0)
 
 def run_controller():
     """
-    Initialise et démarre le SerreController.
+    Initialise et démarre le SerreController + l'API de monitoring.
     """
-    global serre_controller_instance, controller_thread
+    global serre_controller_instance, controller_thread, api_thread
 
     main_logger.info("----------------------------------------------------")
-    main_logger.info("--- Démarrage du Contrôleur de Serre (Mode CLI) ---")
+    main_logger.info("--- Démarrage du Contrôleur de Serre + API ---")
     main_logger.info("----------------------------------------------------")
     main_logger.info(f"Mode Matériel (HARDWARE_ENV): {config.HARDWARE_ENV}")
     main_logger.info(f"Mode Base de Données (DB_ENV): {config.DB_ENV}")
@@ -125,19 +127,40 @@ def run_controller():
     main_logger.info(f"Logs écrits dans le fichier: {config.LOG_FILE_PATH if hasattr(config, 'LOG_FILE_PATH') and any(isinstance(h, logging.FileHandler) for h in root_logger.handlers) else 'Non configuré ou erreur'}")
     main_logger.info("Appuyez sur Ctrl+C pour arrêter.")
 
+    # Initialiser SerreController EN PREMIER (peut prendre du temps si capteur lent)
     try:
+        main_logger.info("🔧 Initialisation du SerreController...")
         serre_controller_instance = SerreController()
+        main_logger.info("✅ SerreController initialisé avec succès")
+    except Exception as e:
+        main_logger.critical(f"Échec de l'initialisation de SerreController: {e}", exc_info=True)
+        sys.exit(1)
+
+    # Injecter l'orchestrateur dans l'API AVANT de démarrer l'API
+    try:
+        from src.api.monitoring_api import attach_orchestrator, start_api_server
+        main_logger.info("🔗 Injection de l'orchestrateur dans l'API...")
+        attach_orchestrator(serre_controller_instance)
         
-        # Démarrer le menu CLI interactif
+        main_logger.info("🌐 Démarrage de l'API de monitoring et contrôle...")
+        api_thread = threading.Thread(target=start_api_server, name="MonitoringAPIThread", daemon=True)
+        api_thread.start()
+        time.sleep(2)  # Laisser l'API démarrer
+        main_logger.info(f"✅ API accessible sur http://{config.APP_HOST}:{config.APP_PORT}/docs")
+        main_logger.info(f"🔑 Clé API: Configurez API_KEY={os.getenv('API_KEY', 'dev-key-change-in-production')}")
+    except Exception as e:
+        main_logger.error(f"Erreur lors du démarrage de l'API: {e}", exc_info=True)
+        main_logger.warning("⚠️ L'API n'a pas pu démarrer, mais le contrôleur continue")
+
+    # Démarrer le menu CLI interactif (optionnel)
+    try:
         use_cli_menu = os.getenv('USE_CLI_MENU', 'true').lower() in ['true', '1', 'yes']
         if use_cli_menu:
             from src.utils.cli_menu import CLIMenu
             cli_menu = CLIMenu(serre_controller_instance)
             cli_menu.start()
-        
     except Exception as e:
-        main_logger.critical(f"Échec de l'initialisation de SerreController: {e}", exc_info=True)
-        sys.exit(1)
+        main_logger.warning(f"CLI menu non disponible: {e}")
 
     # Démarrer la boucle principale du contrôleur dans son propre thread
     controller_thread = threading.Thread(target=serre_controller_instance.run, name="SerreControllerThread", daemon=True)
