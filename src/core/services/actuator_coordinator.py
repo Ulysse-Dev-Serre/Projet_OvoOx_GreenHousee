@@ -22,13 +22,15 @@ class ActuatorCoordinator:
     - Gère les modes manuel/automatique
     """
     
-    def __init__(self, config_manager: ConfigurationManager):
+    def __init__(self, config_manager: ConfigurationManager, sensor_service):
         """
         Args:
             config_manager: Gestionnaire de configuration
+            sensor_service: Service d'acquisition des capteurs
         """
         self.logger = logging.getLogger(__name__)
         self.config_manager = config_manager
+        self.sensor_service = sensor_service
         
         # Verrou pour sérialiser les commandes de contrôle manuel
         self._control_lock = threading.Lock()
@@ -108,7 +110,12 @@ class ActuatorCoordinator:
     
     def _force_update(self, actuator_controller):
         """Force une mise à jour immédiate d'un actionneur"""
-        # Obtenir les dernières données capteurs (ou valeurs par défaut)
-        dummy_data = {'temperature': None, 'humidite': None, 'co2': None}
-        actuator_controller.update_state(dummy_data)
+        # Obtenir les dernières données capteurs réelles
+        latest_data = self.sensor_service.get_latest_data()
+        current_data = {
+            'temperature': latest_data.temperature,
+            'humidite': latest_data.humidity,
+            'co2': latest_data.co2
+        }
+        actuator_controller.update_state(current_data)
         actuator_controller._control_hardware()

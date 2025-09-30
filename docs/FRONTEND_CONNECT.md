@@ -492,8 +492,8 @@ async function safeRequest(url, options) {
 ## 📋 Checklist Développement
 
 ### Étape 1 : Configuration
-- [ ] Obtenir l'IP du Raspberry Pi
-- [ ] Configurer `API_KEY` dans l'app
+- [ ] IP du Raspberry Pi : `10.0.0.216`
+- [ ] Configurer `API_KEY = 'test-key'` dans l'app
 - [ ] Tester la connexion (`GET /health`)
 
 ### Étape 2 : Affichage
@@ -575,7 +575,7 @@ Ouvrez dans votre navigateur : `http://<IP_RASPBERRY>:5000/docs`
 
 ## 📚 Références
 
-- **API complète** : `http://<IP_RASPBERRY>:5000/docs` (Swagger)
+- **API complète** : `http://10.0.0.216:5000/docs` (Swagger)
 - **Code backend** : `src/api/monitoring_api.py`
 - **Tests curl** : `docs/3-api/API_GUIDE.md`
 - **Scripts de test** : `scripts/test_api.sh` et `scripts/test_api_simple.py`

@@ -77,7 +77,8 @@ class SerreOrchestrator:
         )
         
         self.actuator_coordinator = ActuatorCoordinator(
-            config_manager=self.config_manager
+            config_manager=self.config_manager,
+            sensor_service=self.sensor_service
         )
         
         self.data_persistence = DataPersistenceService(
