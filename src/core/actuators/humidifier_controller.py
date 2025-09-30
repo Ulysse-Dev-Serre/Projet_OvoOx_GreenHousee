@@ -1,5 +1,6 @@
 # src/core/actuators/humidifier_controller.py
 from .base_actuator import BaseActuator
+from .actuator_registry import ActuatorRegistry
 from datetime import datetime
 import logging
 from src import config # Importer le module config depuis src
@@ -14,6 +15,7 @@ class HumidifierController(BaseActuator):
         super().__init__(hardware_interface, "humidifier")
         self.controller = config_manager
         self.last_special_session_done_today = False
+        ActuatorRegistry.register("humidifier", self)
 
     def _get_desired_automatic_state(self, current_sensor_data: dict) -> bool:
         """

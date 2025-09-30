@@ -18,6 +18,7 @@ from src.core.services.data_persistence_service import DataPersistenceService
 from src.core.actuators.led_controller import LedController
 from src.core.actuators.humidifier_controller import HumidifierController
 from src.core.actuators.ventilation_controller import VentilationController
+from src.core.actuators.actuator_registry import ActuatorRegistry
 
 # Import du gestionnaire de base de données
 try:
@@ -64,10 +65,10 @@ class SerreOrchestrator:
         self.config_manager = ConfigurationManager()
         self.db_manager = self._initialize_db_manager()
         
-        # Créer les contrôleurs d'actionneurs
-        self.led_ctrl = LedController(self.hardware, self.config_manager)
-        self.humidifier_ctrl = HumidifierController(self.hardware, self.config_manager)
-        self.ventilation_ctrl = VentilationController(self.hardware, self.config_manager)
+        # Créer les contrôleurs d'actionneurs (ils s'auto-enregistrent dans le registre)
+        LedController(self.hardware, self.config_manager)
+        HumidifierController(self.hardware, self.config_manager)
+        VentilationController(self.hardware, self.config_manager)
         
         # Créer les services métier
         self.sensor_service = SensorAcquisitionService(
@@ -76,9 +77,6 @@ class SerreOrchestrator:
         )
         
         self.actuator_coordinator = ActuatorCoordinator(
-            led_controller=self.led_ctrl,
-            humidifier_controller=self.humidifier_ctrl,
-            ventilation_controller=self.ventilation_ctrl,
             config_manager=self.config_manager
         )
         
@@ -173,13 +171,13 @@ class SerreOrchestrator:
     
     # Méthodes de contrôle manuel (délégation)
     def set_leds_manual_mode(self, active: bool, state_if_manual: bool = False):
-        self.actuator_coordinator.set_led_manual_mode(active, state_if_manual)
+        self.actuator_coordinator.set_actuator_manual_mode("leds", active, state_if_manual)
     
     def set_humidifier_manual_mode(self, active: bool, state_if_manual: bool = False):
-        self.actuator_coordinator.set_humidifier_manual_mode(active, state_if_manual)
+        self.actuator_coordinator.set_actuator_manual_mode("humidifier", active, state_if_manual)
     
     def set_ventilation_manual_mode(self, active: bool, state_if_manual: bool = False):
-        self.actuator_coordinator.set_ventilation_manual_mode(active, state_if_manual)
+        self.actuator_coordinator.set_actuator_manual_mode("ventilation", active, state_if_manual)
     
     def set_all_auto_mode(self):
         self.actuator_coordinator.set_all_auto_mode()

@@ -1,5 +1,6 @@
 # src/core/actuators/ventilation_controller.py
 from .base_actuator import BaseActuator
+from .actuator_registry import ActuatorRegistry
 from datetime import datetime
 import logging
 from src import config # Importer le module config depuis src
@@ -13,6 +14,7 @@ class VentilationController(BaseActuator):
     def __init__(self, hardware_interface, config_manager):
         super().__init__(hardware_interface, "ventilation")
         self.controller = config_manager
+        ActuatorRegistry.register("ventilation", self)
 
     def _get_desired_automatic_state(self, current_sensor_data: dict) -> bool:
         """

@@ -22,9 +22,11 @@ Projet_IoT_RaspberryPi/
 │   ├── core/                           # Logique métier
 │   │   ├── orchestrator.py             # Orchestrateur principal (coordonne tout)
 │   │   ├── actuators/                  # Contrôleurs d'actionneurs
-│   │   │   ├── led_controller.py       # Gestion LEDs
-│   │   │   ├── humidifier_controller.py # Gestion humidificateur
-│   │   │   └── ventilation_controller.py # Gestion ventilation
+│   │   │   ├── base_actuator.py        # Classe abstraite pour actionneurs
+│   │   │   ├── actuator_registry.py    # Registre dynamique (SOLID OCP)
+│   │   │   ├── led_controller.py       # Gestion LEDs (auto-enregistré)
+│   │   │   ├── humidifier_controller.py # Gestion humidificateur (auto-enregistré)
+│   │   │   └── ventilation_controller.py # Gestion ventilation (auto-enregistré)
 │   │   └── services/                   # Services métier (SRP)
 │   │       ├── sensor_service.py       # Acquisition capteurs en arrière-plan
 │   │       ├── actuator_coordinator.py # Coordination actionneurs (thread-safe)
@@ -70,6 +72,16 @@ Le projet suit une **architecture SOLID modulaire** :
 - **Orchestrator** (`orchestrator.py`) : Coordonne tous les services. Il ne fait QUE coordonner, pas de logique métier.
 - **Services** : Chaque service a une responsabilité unique (acquisition capteurs, coordination actionneurs, persistence, configuration).
 - **Abstraction matérielle** : `RaspberryPiHardware` ou `MockHardware` peuvent être utilisés de manière interchangeable.
+- **Registry Pattern** : Les actionneurs s'auto-enregistrent dans `ActuatorRegistry`, permettant d'ajouter de nouveaux devices sans modifier le code existant (Open/Closed Principle).
 - **API** : L'orchestrateur est injecté dans l'API FastAPI pour permettre le contrôle à distance.
 
 L'application peut tourner en **mode mock** (simulation) ou **mode réel** (GPIO/I2C), configuré via la variable d'environnement `HARDWARE_ENV`.
+
+### Ajouter un Nouvel Actionneur (SOLID OCP)
+
+Pour ajouter un nouveau device (ex: `HeaterController`):
+1. Créer `src/core/actuators/heater_controller.py` héritant de `BaseActuator`
+2. Dans `__init__`, appeler `ActuatorRegistry.register("heater", self)`
+3. Instancier dans `orchestrator.py` : `HeaterController(self.hardware, self.config_manager)`
+
+**Aucune modification requise dans `ActuatorCoordinator` ou ses méthodes !**
