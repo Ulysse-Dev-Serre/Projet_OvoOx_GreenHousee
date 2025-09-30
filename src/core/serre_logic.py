@@ -15,18 +15,24 @@ from .actuators.humidifier_controller import HumidifierController
 from .actuators.ventilation_controller import VentilationController
 
 try:
-    from ..utils.db_utils import DatabaseManager
-except ImportError:
-    logging.warning("DatabaseManager non trouvé dans src.utils.db_utils. Utilisation de MockDatabaseManager.")
+    # Importer le bon gestionnaire de BD selon la configuration
+    if config.DB_TYPE == 'sqlite':
+        from ..utils.db_utils_sqlite import SQLiteDatabaseManager as DatabaseManager
+        logging.info("Utilisation de SQLite pour la base de données")
+    else:
+        from ..utils.db_utils import DatabaseManager
+        logging.info("Utilisation de PostgreSQL pour la base de données")
+except ImportError as e:
+    logging.warning(f"DatabaseManager non trouvé: {e}. Utilisation de MockDatabaseManager.")
     class MockDatabaseManager:
         def __init__(self, *args, **kwargs): pass
         def add_sensor_data_to_buffer(self, *args, **kwargs): logging.debug("MockDM: add_sensor_data_to_buffer")
         def flush_buffer(self): logging.debug("MockDM: flush_buffer")
         def close_pool(self): logging.debug("MockDM: close_pool")
     DatabaseManager = MockDatabaseManager
-except Exception as e: # Attraper d'autres erreurs d'import possibles pour DatabaseManager
+except Exception as e:
     logging.error(f"Erreur inattendue lors de l'import de DatabaseManager: {e}. Utilisation de MockDatabaseManager.")
-    class MockDatabaseManager: # Fallback
+    class MockDatabaseManager:
         def __init__(self, *args, **kwargs): pass
         def add_sensor_data_to_buffer(self, *args, **kwargs): logging.debug("MockDM: add_sensor_data_to_buffer")
         def flush_buffer(self): logging.debug("MockDM: flush_buffer")

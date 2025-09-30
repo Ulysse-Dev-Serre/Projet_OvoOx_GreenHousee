@@ -14,7 +14,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 try:
-    from src.core.serre_logic import SerreController
+    from src.core.orchestrator import SerreOrchestrator as SerreController  # Nouveau orchestrateur (SRP)
     from src import config # S'assure que config.py est accessible et chargé
 except ImportError as e:
     # Utiliser print ici car le logging n'est peut-être pas encore configuré
@@ -127,6 +127,14 @@ def run_controller():
 
     try:
         serre_controller_instance = SerreController()
+        
+        # Démarrer le menu CLI interactif
+        use_cli_menu = os.getenv('USE_CLI_MENU', 'true').lower() in ['true', '1', 'yes']
+        if use_cli_menu:
+            from src.utils.cli_menu import CLIMenu
+            cli_menu = CLIMenu(serre_controller_instance)
+            cli_menu.start()
+        
     except Exception as e:
         main_logger.critical(f"Échec de l'initialisation de SerreController: {e}", exc_info=True)
         sys.exit(1)
@@ -167,6 +175,18 @@ def run_controller():
 
 
 if __name__ == "__main__":
+    # Nettoyer Flask avant de démarrer (conflit GPIO)
+    import subprocess
+    try:
+        # Tuer uniquement Flask (app.py)
+        result = subprocess.run(['pkill', '-9', '-f', 'python.*app.py'], 
+                              stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        if result.returncode == 0:
+            print("🛑 Processus Flask arrêté (conflit GPIO)")
+            time.sleep(1)
+    except Exception:
+        pass  # Pas grave si ça échoue
+    
     # Enregistrer les gestionnaires de signaux pour un arrêt propre
     # SIGINT est généralement déclenché par Ctrl+C.
     # SIGTERM est un signal d'arrêt plus générique (ex: `kill <pid>`).

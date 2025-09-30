@@ -124,6 +124,16 @@ gestion_serre/
         ```
         *(Assurez-vous que les noms de colonnes correspondent à ceux utilisés dans `src/utils/db_utils.py`)*
 
+## 📚 Documentation
+
+Toute la documentation détaillée est disponible dans le dossier [docs/](docs/) :
+
+- **[docs/QUICK_START.md](docs/QUICK_START.md)** - Démarrage rapide en 5 minutes
+- **[docs/INSTALLATION.md](docs/INSTALLATION.md)** - Guide d'installation complet
+- **[docs/STATUS.md](docs/STATUS.md)** - État actuel du projet
+- **[docs/HARDWARE_FIXED.md](docs/HARDWARE_FIXED.md)** - Résolution problème capteur SCD30
+- **[docs/REFACTORING_GUIDE.md](docs/REFACTORING_GUIDE.md)** - Plan de refactorisation SOLID
+
 ## Utilisation
 
 ### 1. Test Manuel du Matériel (sur Raspberry Pi uniquement)

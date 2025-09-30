@@ -10,9 +10,9 @@ class HumidifierController(BaseActuator):
     Utilise les configurations dynamiques fournies par SerreController
     et les valeurs par défaut globales de src.config.
     """
-    def __init__(self, hardware_interface, controller_instance):
+    def __init__(self, hardware_interface, config_manager):
         super().__init__(hardware_interface, "humidifier")
-        self.controller = controller_instance
+        self.controller = config_manager
         self.last_special_session_done_today = False
 
     def _get_desired_automatic_state(self, current_sensor_data: dict) -> bool:
@@ -23,19 +23,19 @@ class HumidifierController(BaseActuator):
 
         # Récupérer les settings dynamiques via SerreController.
         # Utiliser les constantes globales de config comme fallback.
-        seuil_humidite_on_setting = self.controller.get_setting(
+        seuil_humidite_on_setting = self.controller.get(
             config.KEY_SEUIL_HUMIDITE_ON,
             config.SEUIL_HUMIDITE_ON # Valeur par défaut globale de config.py
         )
-        seuil_humidite_off_setting = self.controller.get_setting(
+        seuil_humidite_off_setting = self.controller.get(
             config.KEY_SEUIL_HUMIDITE_OFF,
             config.SEUIL_HUMIDITE_OFF # Valeur par défaut globale de config.py
         )
-        heure_debut_operation_setting = self.controller.get_setting(
+        heure_debut_operation_setting = self.controller.get(
             config.KEY_HEURE_DEBUT_JOUR_OPERATION,
             config.HEURE_DEBUT_JOUR_OPERATION # Valeur par défaut globale de config.py
         )
-        heure_fin_operation_setting = self.controller.get_setting(
+        heure_fin_operation_setting = self.controller.get(
             config.KEY_HEURE_FIN_JOUR_OPERATION,
             config.HEURE_FIN_JOUR_OPERATION # Valeur par défaut globale de config.py
         )

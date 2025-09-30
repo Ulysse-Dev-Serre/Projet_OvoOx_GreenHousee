@@ -17,4 +17,6 @@ pytest-mock>=3.0.0      # Pour faciliter la simulation (mocking) lors des tests
 
 # Autres bibliothèques que vous pourriez ajouter ultérieurement :
 # requests
-# pydantic
+# pydanticflask
+fastapi
+uvicorn[standard]

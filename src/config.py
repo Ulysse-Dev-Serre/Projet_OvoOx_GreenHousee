@@ -13,6 +13,7 @@ PROJECT_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # --- Configuration de l'Environnement ---
 HARDWARE_ENV = os.getenv('HARDWARE_ENV', 'raspberry_pi') # Défaut à 'raspberry_pi'
 DB_ENV = os.getenv('DB_ENV', 'prod')
+DB_TYPE = os.getenv('DB_TYPE', 'sqlite')  # 'sqlite' ou 'postgres'
 
 # --- Configurations de la Base de Données ---
 DB_CONFIG_PROD = {
@@ -34,6 +35,9 @@ DB_CONFIG_TEST = {
 }
 
 ACTIVE_DB_CONFIG = DB_CONFIG_PROD if DB_ENV == 'prod' else DB_CONFIG_TEST
+
+# --- Configuration SQLite ---
+SQLITE_DB_PATH = os.path.join(PROJECT_ROOT_DIR, 'data', 'serre.db')
 
 # --- Constantes pour les Intervalles et Buffers (Base de Données) ---
 INTERVALLE_LECTURE_CAPTEURS_SECONDES = 60

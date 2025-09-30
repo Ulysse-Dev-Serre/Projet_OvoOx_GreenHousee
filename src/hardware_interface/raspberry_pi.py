@@ -43,20 +43,62 @@ class RaspberryPiHardware(BaseHardware):
             self.logger.info("GPIO chip (lgpio) ouvert.")
 
             # Initialisation du bus I2C et du capteur SCD30
-            self.i2c = busio.I2C(board.SCL, board.SDA) # Utilise les pins SCL/SDA par défaut de board
+            self.logger.info("Initialisation du bus I2C...")
+            time.sleep(0.5)  # Petit délai avant d'ouvrir le bus I2C
+            self.i2c = busio.I2C(board.SCL, board.SDA)
             self.logger.info("Bus I2C initialisé.")
             
-            self.scd = adafruit_scd30.SCD30(self.i2c)
-            self.logger.info("Capteur SCD30 contacté. Attente pour stabilisation...")
-            time.sleep(2) # Délai pour la stabilisation initiale du SCD30
-
-            try:
-                if self.scd.data_available:
-                    self.logger.info(f"SCD30 prêt. Température initiale lue: {self.scd.temperature:.1f}°C")
-                else:
-                    self.logger.info("SCD30: Données non disponibles immédiatement après initialisation.")
-            except Exception as e_init_read:
-                self.logger.warning(f"SCD30: Problème lors de la lecture de vérification initiale: {e_init_read}")
+            # Attendre que le bus soit prêt
+            time.sleep(1)
+            
+            # Tentatives multiples d'initialisation du capteur SCD30
+            max_init_attempts = 3
+            scd_initialized = False
+            
+            for attempt in range(1, max_init_attempts + 1):
+                try:
+                    self.logger.info(f"Tentative {attempt}/{max_init_attempts} d'initialisation du capteur SCD30...")
+                    self.scd = adafruit_scd30.SCD30(self.i2c)
+                    self.logger.info("Capteur SCD30 contacté. Attente pour stabilisation...")
+                    time.sleep(3)  # Délai augmenté pour la stabilisation initiale
+                    
+                    # Vérifier que le capteur répond
+                    if self.scd.data_available:
+                        temp = self.scd.temperature
+                        self.logger.info(f"SCD30 prêt et fonctionnel! Température initiale: {temp:.1f}°C")
+                        scd_initialized = True
+                        break
+                    else:
+                        self.logger.info("SCD30 initialisé mais données pas encore disponibles. Attente supplémentaire...")
+                        time.sleep(2)
+                        if self.scd.data_available:
+                            self.logger.info("SCD30 maintenant prêt avec données disponibles.")
+                            scd_initialized = True
+                            break
+                        
+                except OSError as e:
+                    if e.errno == 121:  # Remote I/O error
+                        self.logger.warning(f"Tentative {attempt}: Erreur I/O (errno 121). Le capteur ne répond pas correctement.")
+                        if attempt < max_init_attempts:
+                            self.logger.info("Réinitialisation du bus I2C avant nouvelle tentative...")
+                            time.sleep(2)
+                            # Recréer le bus I2C
+                            try:
+                                self.i2c.deinit()
+                            except:
+                                pass
+                            time.sleep(1)
+                            self.i2c = busio.I2C(board.SCL, board.SDA)
+                            time.sleep(1)
+                    else:
+                        raise
+                except Exception as e_init:
+                    self.logger.error(f"Tentative {attempt}: Erreur lors de l'initialisation du SCD30: {e_init}")
+                    if attempt < max_init_attempts:
+                        time.sleep(2)
+            
+            if not scd_initialized:
+                raise RuntimeError("Impossible d'initialiser le capteur SCD30 après plusieurs tentatives")
 
             # Réclamer les broches GPIO en sortie en utilisant les valeurs de config
             # Note: la valeur 0 pour lgpio.gpio_write signifie ON (typiquement pour un relais actif bas)

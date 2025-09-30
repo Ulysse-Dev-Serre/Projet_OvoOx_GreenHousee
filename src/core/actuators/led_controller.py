@@ -22,15 +22,14 @@ class LedController(BaseActuator):
         """
         heure_actuelle = datetime.now().hour
 
-        # Récupérer les horaires depuis les settings dynamiques via SerreController.
-        # Utiliser les constantes globales de config (initialisées depuis DEFAULT_SETTINGS) comme fallback.
-        heure_debut_leds_setting = self.controller.get_setting(
+        # Récupérer les horaires depuis les settings dynamiques via ConfigurationManager
+        heure_debut_leds_setting = self.controller.get(
             config.KEY_HEURE_DEBUT_LEDS,
-            config.HEURE_DEBUT_LEDS # Valeur par défaut globale de config.py
+            config.HEURE_DEBUT_LEDS
         )
-        heure_fin_leds_setting = self.controller.get_setting(
+        heure_fin_leds_setting = self.controller.get(
             config.KEY_HEURE_FIN_LEDS,
-            config.HEURE_FIN_LEDS # Valeur par défaut globale de config.py
+            config.HEURE_FIN_LEDS
         )
 
         try:

@@ -1,0 +1,39 @@
+[Unit]
+Description=Serre Connectée - Système de contrôle automatisé
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ulysse
+Group=ulysse
+WorkingDirectory=/home/ulysse/Projet_IoT_RaspberryPi
+
+# Variables d'environnement
+Environment="HARDWARE_ENV=raspberry_pi"
+Environment="DB_TYPE=sqlite"
+Environment="DB_ENV=prod"
+Environment="LOG_LEVEL=INFO"
+
+# Commande d'exécution avec l'environnement virtuel
+ExecStart=/home/ulysse/Projet_IoT_RaspberryPi/myenv/bin/python /home/ulysse/Projet_IoT_RaspberryPi/main.py
+
+# Redémarrage automatique en cas d'échec
+Restart=on-failure
+RestartSec=10s
+
+# Délais
+TimeoutStartSec=60s
+TimeoutStopSec=30s
+
+# Limites de ressources (optionnel mais recommandé pour Raspberry Pi)
+MemoryLimit=500M
+CPUQuota=80%
+
+# Logs
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=serre-connectee
+
+[Install]
+WantedBy=multi-user.target
