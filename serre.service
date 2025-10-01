@@ -14,6 +14,7 @@ Environment="HARDWARE_ENV=raspberry_pi"
 Environment="DB_TYPE=sqlite"
 Environment="DB_ENV=prod"
 Environment="LOG_LEVEL=INFO"
+Environment="API_KEY=test-key"
 
 # Commande d'exécution avec l'environnement virtuel
 ExecStart=/home/ulysse/Projet_IoT_RaspberryPi/myenv/bin/python /home/ulysse/Projet_IoT_RaspberryPi/main.py
